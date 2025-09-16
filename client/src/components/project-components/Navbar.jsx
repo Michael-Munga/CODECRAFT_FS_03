@@ -1,4 +1,4 @@
-import { useId, useState } from "react";
+import { useId } from "react";
 import { SearchIcon, ShoppingCart, User } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -8,6 +8,8 @@ import {
   NavigationMenuItem,
   NavigationMenuLink,
   NavigationMenuList,
+  NavigationMenuTrigger,
+  NavigationMenuContent,
 } from "@/components/ui/navigation-menu";
 
 // Navigation links array
@@ -22,10 +24,9 @@ const navigationLinks = [
 
 export default function Navbar() {
   const id = useId();
-  const [accountOpen, setAccountOpen] = useState(false);
 
   return (
-    <header className="border-b border-stone-300 bg-gradient-to-r from-amber-700 via-rose-700 to-stone-800 text-white shadow-md">
+    <header className="sticky top-0 z-50 border-b border-stone-300 bg-gradient-to-r from-amber-700 via-rose-700 to-stone-800 text-white shadow-md">
       {/* Top row-->brand and search */}
       <div className="flex h-16 items-center justify-between gap-4 px-4 md:px-8">
         {/* Brand */}
@@ -81,27 +82,26 @@ export default function Navbar() {
           {/* Right side--> account + cart */}
           <div className="flex items-center gap-6">
             {/* My Account */}
-            <div
-              className="relative"
-              onMouseEnter={() => setAccountOpen(true)}
-              onMouseLeave={() => setAccountOpen(false)}
-            >
-              <button className="flex items-center gap-1 text-sm font-medium text-stone-700 hover:text-amber-700 transition-colors">
-                <User size={18} />
-                <span>My Account</span>
-              </button>
-
-              {accountOpen && (
-                <div className="absolute right-0 mt-2 w-40 rounded-lg bg-white shadow-lg ring-1 ring-stone-300 p-3">
-                  <Link
-                    to="/login"
-                    className="block w-full rounded-lg bg-amber-500 px-4 py-2 text-center text-sm font-medium text-stone-900 shadow hover:bg-amber-600 transition"
-                  >
-                    Login
-                  </Link>
-                </div>
-              )}
-            </div>
+            <NavigationMenu>
+              <NavigationMenuList>
+                <NavigationMenuItem>
+                  <NavigationMenuTrigger className="flex items-center gap-1 text-sm font-medium text-stone-700 hover:text-amber-700 transition-colors">
+                    <User size={18} />
+                    <span>My Account</span>
+                  </NavigationMenuTrigger>
+                  <NavigationMenuContent className="z-50 w-40 rounded-lg bg-white shadow-lg ring-1 ring-stone-300 p-3">
+                    <NavigationMenuLink asChild>
+                      <Link
+                        to="/login"
+                        className="block w-full rounded-lg bg-amber-500 px-4 py-2 text-center text-sm font-medium text-stone-900 shadow hover:bg-amber-600 transition"
+                      >
+                        Login
+                      </Link>
+                    </NavigationMenuLink>
+                  </NavigationMenuContent>
+                </NavigationMenuItem>
+              </NavigationMenuList>
+            </NavigationMenu>
 
             {/* Cart */}
             <button className="relative flex items-center gap-1 text-sm font-medium text-stone-700 hover:text-amber-700 transition-colors">
