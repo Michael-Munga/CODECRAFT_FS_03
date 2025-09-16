@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Mail, Lock, Eye, EyeOff, Loader2 } from "lucide-react";
+import { Link } from "react-router-dom";
 
 export default function LoginForm() {
   const [email, setEmail] = useState("");
@@ -120,12 +121,12 @@ export default function LoginForm() {
 
               <div className="mt-8 text-center text-sm text-stone-600">
                 Don’t have an account?{" "}
-                <a
-                  href="#"
+                <Link
+                  to="/signup"
                   className="font-medium text-amber-700 hover:underline"
                 >
                   Join The Vintage Closet
-                </a>
+                </Link>
               </div>
             </div>
           </div>
