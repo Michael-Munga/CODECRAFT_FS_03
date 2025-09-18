@@ -15,9 +15,8 @@ import {
 // Navigation links array
 const navigationLinks = [
   { to: "/", label: "Home", active: true },
-  { to: "/shop", label: "Shop" },
+  { to: "/products", label: "Shop" },
   { to: "/new-arrivals", label: "New Arrivals" },
-  { to: "/collections", label: "Collections" },
   { to: "/about", label: "About Us" },
   { to: "/contact", label: "Contact" },
 ];

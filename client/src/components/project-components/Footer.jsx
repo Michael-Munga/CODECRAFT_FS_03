@@ -39,11 +39,7 @@ export default function Footer() {
                   New Arrivals
                 </Link>
               </li>
-              <li>
-                <Link to="/collections" className="hover:underline">
-                  Collections
-                </Link>
-              </li>
+             
               <li>
                 <Link to="/contact" className="hover:underline">
                   Contact

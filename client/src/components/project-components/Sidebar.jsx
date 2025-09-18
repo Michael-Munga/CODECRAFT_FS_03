@@ -1,4 +1,11 @@
-import { Home, ShoppingBag, Tag, Heart, User, Archive } from "lucide-react";
+import {
+  Home,
+  ShoppingBag,
+  Tag,
+  Heart,
+  User,
+  ShoppingCart,
+} from "lucide-react";
 
 import {
   Sidebar,
@@ -15,10 +22,10 @@ import {
 const items = [
   { title: "Home", icon: Home },
   { title: "Shop", icon: ShoppingBag },
-  { title: "Collections", icon: Tag },
+  { title: "Categories", icon: Tag },
   { title: "Favorites", icon: Heart },
+  { title: "Cart", icon: ShoppingCart },
   { title: "Account", icon: User },
-  { title: "Archive", icon: Archive },
 ];
 
 export function SideBar() {

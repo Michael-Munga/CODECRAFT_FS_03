@@ -1,3 +1,9 @@
+@import url("https://fonts.googleapis.com/css2?family=Boldonse&family=Bungee+Tint&family=Ewert&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap");
+@import url('https://fonts.googleapis.com/css2?family=Boldonse&family=Bungee+Tint&family=Ewert&family=Felipa&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Boldonse&family=Bungee+Tint&family=Ewert&family=Felipa&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=New+Rocker&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Boldonse&family=Bungee+Tint&family=Ewert&family=Felipa&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=New+Rocker&family=Smokum&display=swap');
+
+
 @import "tailwindcss";
 @import "tw-animate-css";
 
@@ -109,6 +115,31 @@
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
 }
+
+.vint {
+  font-family: "Ewert", serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
+.felipa {
+  font-family: "Felipa", serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
+.rocker {
+  font-family: "New Rocker", system-ui;
+  font-weight: 400;
+  font-style: normal;
+}
+
+.smokum {
+  font-family: "Smokum", serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
 
 @layer base {
   * {
