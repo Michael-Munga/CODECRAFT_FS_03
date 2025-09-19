@@ -51,7 +51,7 @@ export default function SignUpForm() {
           <div className="flex flex-col justify-center p-10">
             <div className="mx-auto w-full max-w-3xl">
               <div className="mb-8 text-center">
-                <h2 className="text-3xl creek text-rose-800">
+                <h2 className="text-3xl oswald  text-[#992b31] ">
                   Create Account
                 </h2>
                 <p className="mt-2 text-stone-600 felipa text-lg">

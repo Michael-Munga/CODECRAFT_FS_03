@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/card";
 import { ShoppingCart } from "lucide-react";
 
-export default function ProductCard({ product }) {
+export default function ProductCard({ product, addToCart }) {
   return (
     <Card className="bg-white  border-amber-200 rounded-xl hover:shadow-lg hover:scale-[1.015] transition-all duration-300 ease-in-out">
       {/* Product Image */}
@@ -39,7 +39,10 @@ export default function ProductCard({ product }) {
       {/* Footer with Add to Cart button */}
       <CardFooter className="p-4">
         <CardAction className="w-full">
-          <button className="w-full flex items-center justify-center gap-2 bg-amber-700 hover:bg-amber-600 text-white py-2 px-4 rounded-lg transition-colors">
+          <button
+            onClick={() => addToCart(product)}
+            className="w-full flex items-center justify-center gap-2 bg-amber-700 hover:bg-amber-600 text-white py-2 px-4 rounded-lg transition-colors"
+          >
             <ShoppingCart className="h-5 w-5" />
             Add to Cart
           </button>

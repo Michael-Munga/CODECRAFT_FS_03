@@ -4,6 +4,7 @@ import LoginPage from "@/Pages/LoginPage";
 import SignUpPage from "@/Pages/SignUpPage";
 import HomePage from "@/Pages/HomePage";
 import ProductsPage from "@/Pages/ProductsPage";
+import CartPage from "@/Pages/CartPage";
 
 export default function Approutes() {
   return (
@@ -12,6 +13,7 @@ export default function Approutes() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/signup" element={<SignUpPage />} />
       <Route path="/products" element={<ProductsPage />} />
+      <Route path="/cart" element={<CartPage />} />
     </Routes>
   );
 }

@@ -11,6 +11,7 @@ import {
   NavigationMenuTrigger,
   NavigationMenuContent,
 } from "@/components/ui/navigation-menu";
+import useCart from "@/hooks/useCart";
 
 // Navigation links array
 const navigationLinks = [
@@ -23,6 +24,8 @@ const navigationLinks = [
 
 export default function Navbar() {
   const id = useId();
+  const { cart } = useCart();
+  const itemCount = cart.reduce((sum, item) => sum + item.qty, 0);
 
   return (
     <header className="sticky top-0 z-50 border-b border-stone-300 bg-gradient-to-r from-amber-700 via-rose-700 to-stone-800 text-white shadow-md">
@@ -60,8 +63,8 @@ export default function Navbar() {
           {/* Navigation menu */}
           <NavigationMenu>
             <NavigationMenuList className="gap-4">
-              {navigationLinks.map((link, label) => (
-                <NavigationMenuItem key={label}>
+              {navigationLinks.map((link) => (
+                <NavigationMenuItem key={link.to}>
                   <NavigationMenuLink
                     active={link.active}
                     asChild
@@ -103,13 +106,19 @@ export default function Navbar() {
             </NavigationMenu>
 
             {/* Cart */}
-            <button className="relative flex items-center gap-1 text-sm font-medium text-stone-700 hover:text-amber-700 transition-colors">
-              <ShoppingCart size={18} />
-              <span>Cart</span>
-              <span className="absolute -top-1 -right-2 h-4 w-4 rounded-full bg-amber-600 text-[10px] font-bold text-white flex items-center justify-center">
-                2
-              </span>
-            </button>
+            <Link to="/cart">
+              <button className="flex items-center gap-1 text-sm font-medium text-stone-700 hover:text-amber-700 transition-colors">
+                <span className="relative">
+                  <ShoppingCart size={18} />
+                  {itemCount > 0 && (
+                    <span className="absolute -top-2 -right-2 h-4 w-4 rounded-full bg-amber-600 text-[10px] font-bold text-white flex items-center justify-center">
+                      {itemCount}
+                    </span>
+                  )}
+                </span>
+                <span>Cart</span>
+              </button>
+            </Link>
           </div>
         </div>
       </div>

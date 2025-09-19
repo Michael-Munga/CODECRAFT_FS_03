@@ -3,6 +3,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Boldonse&family=Bungee+Tint&family=Ewert&family=Felipa&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=New+Rocker&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Boldonse&family=Bungee+Tint&family=Ewert&family=Felipa&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=New+Rocker&family=Smokum&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Boldonse&family=Bungee+Tint&family=Ewert&family=Felipa&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=New+Rocker&family=Sancreek&family=Smokum&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bitcount+Ink:wght@100..900&family=Boldonse&family=Bungee+Tint&family=Ewert&family=Felipa&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=New+Rocker&family=Oswald:wght@200..700&family=Sancreek&family=Smokum&display=swap');
 
 
 
@@ -147,6 +148,13 @@
   font-style: normal;
 }
 
+
+.oswald {
+  font-family: "Oswald", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 600;
+  font-style: normal;
+}
 
 @layer base {
   * {

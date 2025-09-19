@@ -36,7 +36,7 @@ export default function LoginForm() {
           <div className="flex flex-col justify-center p-10">
             <div className="mx-auto w-full max-w-md">
               <div className="mb-8 text-center">
-                <h2 className="text-3xl  text-rose-800 creek">
+                <h2 className="text-3xl   text-[#992b31]  creek">
                   Welcome Back
                 </h2>
                 <p className="mt-2 text-black text-lg felipa">
