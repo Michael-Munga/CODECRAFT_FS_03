@@ -18,15 +18,15 @@ export default function LoginForm() {
   };
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center bg-stone-100">
+    <div className="relative flex  items-center justify-center">
       <div className="relative z-10 w-full max-w-3xl bg-white rounded-[32px] shadow-2xl overflow-hidden border border-stone-200">
         <div className="grid md:grid-cols-2">
           {/* Left */}
           <div className="hidden md:flex flex-col justify-center bg-gradient-to-b from-amber-700 via-rose-700 to-stone-800 p-12 text-white">
-            <h1 className="mb-4 text-4xl font-serif font-bold leading-tight">
+            <h1 className="mb-4 text-4xl creek leading-tight">
               The Vintage Closet
             </h1>
-            <p className="opacity-90 text-lg">
+            <p className="opacity-90 text-3xl felipa">
               Step into timeless fashion. Sign in to access curated outfits,
               exclusive drops, and retro finds.
             </p>
@@ -36,10 +36,10 @@ export default function LoginForm() {
           <div className="flex flex-col justify-center p-10">
             <div className="mx-auto w-full max-w-md">
               <div className="mb-8 text-center">
-                <h2 className="text-3xl font-serif font-bold text-stone-800">
+                <h2 className="text-3xl  text-rose-800 creek">
                   Welcome Back
                 </h2>
-                <p className="mt-2 text-stone-600">
+                <p className="mt-2 text-black text-lg felipa">
                   Your style journey continues here
                 </p>
               </div>

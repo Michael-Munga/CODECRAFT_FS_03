@@ -2,6 +2,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Boldonse&family=Bungee+Tint&family=Ewert&family=Felipa&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Boldonse&family=Bungee+Tint&family=Ewert&family=Felipa&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=New+Rocker&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Boldonse&family=Bungee+Tint&family=Ewert&family=Felipa&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=New+Rocker&family=Smokum&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Boldonse&family=Bungee+Tint&family=Ewert&family=Felipa&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=New+Rocker&family=Sancreek&family=Smokum&display=swap');
+
 
 
 @import "tailwindcss";
@@ -136,6 +138,11 @@
 
 .smokum {
   font-family: "Smokum", serif;
+  font-weight: 400;
+  font-style: normal;
+}
+ .creek {
+  font-family: "Sancreek", serif;
   font-weight: 400;
   font-style: normal;
 }
