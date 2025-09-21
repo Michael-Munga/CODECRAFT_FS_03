@@ -1,0 +1,57 @@
+# Byte-compiled / cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+venv/
+env/
+ENV/
+.venv/
+
+# Environment variables
+.env
+.env.*
+
+# Flask instance folder 
+instance/
+
+# Pytest cache and test output
+.pytest_cache/
+.coverage
+htmlcov/
+.cache/
+
+# Database files (SQLite or local dev DBs)
+*.sqlite3
+*.db
+
+# Migrations 
+migrations/__pycache__/
+migrations/*.pyc
+
+# Logs
+*.log
+
+# IDEs and tooling
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+# Build & distribution
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# MyPy, coverage, and other tooling artifacts
+.mypy_cache/
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
