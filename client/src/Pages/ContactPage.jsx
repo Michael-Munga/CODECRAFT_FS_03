@@ -32,7 +32,7 @@ export default function ContactPage() {
   return (
     <section className="w-full max-w-5xl mx-auto px-4 py-16">
       {/* Header */}
-      <h2 className="text-center text-4xl font-bold smokum text-amber-900 mb-4">
+      <h2 className="text-center text-4xl font-bold oswald text-amber-900 mb-4">
         Get in Touch
       </h2>
       <p className="text-center text-stone-600 oswald mb-10">

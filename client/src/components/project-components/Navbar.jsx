@@ -35,7 +35,7 @@ export default function Navbar() {
         <div className="flex flex-1 items-center">
           <Link
             to="/"
-            className="text-2xl font-serif font-bold tracking-wide text-white hover:text-amber-200 transition-colors"
+            className="text-2xl font-serif font-bold tracking-wide text-white hover:text-amber-200 transition-colors oswald"
           >
             Vintage Closet
           </Link>
