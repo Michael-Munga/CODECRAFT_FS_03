@@ -1,6 +1,6 @@
-import { useId } from "react";
+import { useId, useState, useEffect } from "react";
 import { SearchIcon, ShoppingCart, User } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 import { Input } from "@/components/ui/input";
 import {
@@ -26,6 +26,24 @@ export default function Navbar() {
   const id = useId();
   const { cart } = useCart();
   const itemCount = cart.reduce((sum, item) => sum + item.qty, 0);
+
+  const navigate = useNavigate();
+  const [user, setUser] = useState(null);
+
+  // Load user from localStorage on mount
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    localStorage.removeItem("access_token");
+    setUser(null);
+    navigate("/login");
+  };
 
   return (
     <header className="sticky top-0 z-50 border-b border-stone-300 bg-gradient-to-r from-amber-700 via-rose-700 to-stone-800 text-white shadow-md">
@@ -91,15 +109,30 @@ export default function Navbar() {
                     <User size={18} />
                     <span>My Account</span>
                   </NavigationMenuTrigger>
-                  <NavigationMenuContent className="z-50 w-40 rounded-lg bg-white shadow-lg ring-1 ring-stone-300 p-3">
-                    <NavigationMenuLink asChild>
-                      <Link
-                        to="/login"
-                        className="block w-full rounded-lg bg-amber-500 px-4 py-2 text-center text-sm font-medium text-stone-900 shadow hover:bg-amber-600 transition"
-                      >
-                        Login
-                      </Link>
-                    </NavigationMenuLink>
+                  <NavigationMenuContent className="z-50 w-48 rounded-lg bg-white shadow-lg ring-1 ring-stone-300 p-3">
+                    {user ? (
+                      <div className="space-y-2">
+                        <p className="text-sm font-medium text-stone-800">
+                          {user.name}
+                        </p>
+                        <p className="text-xs text-stone-500">{user.email}</p>
+                        <button
+                          onClick={handleLogout}
+                          className="mt-2 block w-full rounded-lg bg-rose-600 px-4 py-2 text-center text-sm font-medium text-white shadow hover:bg-rose-700 transition"
+                        >
+                          Logout
+                        </button>
+                      </div>
+                    ) : (
+                      <NavigationMenuLink asChild>
+                        <Link
+                          to="/login"
+                          className="block w-full rounded-lg bg-amber-500 px-4 py-2 text-center text-sm font-medium text-stone-900 shadow hover:bg-amber-600 transition"
+                        >
+                          Login
+                        </Link>
+                      </NavigationMenuLink>
+                    )}
                   </NavigationMenuContent>
                 </NavigationMenuItem>
               </NavigationMenuList>
