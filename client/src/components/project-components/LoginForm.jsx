@@ -9,7 +9,7 @@ export default function LoginForm() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(""); 
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -20,10 +20,12 @@ export default function LoginForm() {
       const res = await api.post("/auth/login", { email, password });
 
       const { access_token, user } = res.data;
-
       if (access_token) {
         localStorage.setItem("access_token", access_token);
-        localStorage.setItem("role", user.role);
+        localStorage.setItem(
+          "user",
+          JSON.stringify({ name: user.name, email: user.email })
+        );
       }
 
       if (user.role === "admin") {
@@ -34,7 +36,7 @@ export default function LoginForm() {
         navigate("/");
       }
     } catch (err) {
-      setError("Invalid email or password"); 
+      setError("Invalid email or password");
       console.error(err);
     } finally {
       setLoading(false);
