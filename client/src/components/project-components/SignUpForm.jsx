@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Mail, Lock, Eye, EyeOff, Loader2, User, Phone } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import api from "@/services/api";
 
 export default function SignUpForm() {
   const [formData, setFormData] = useState({
@@ -13,23 +14,44 @@ export default function SignUpForm() {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (formData.password !== formData.confirmPassword) {
       alert("Passwords do not match!");
       return;
     }
     setLoading(true);
-    setTimeout(() => {
-      alert(`Welcome ${formData.firstName}! Your account has been created.`);
+
+    try {
+      const response = await api.post("/auth/register", {
+        first_name: formData.firstName,
+        last_name: formData.lastName,
+        email: formData.email,
+        phone: formData.phone,
+        password: formData.password,
+      });
+
+      const { access_token, user } = response.data;
+
+      // Save token and user
+      localStorage.setItem("token", access_token);
+      localStorage.setItem("user", JSON.stringify(user));
+
+      // Redirect
+      navigate("/");
+    } catch (error) {
+      console.error(error);
+      alert(error.response?.data?.message || "Signup failed. Try again.");
+    } finally {
       setLoading(false);
-    }, 2000);
+    }
   };
 
   return (
