@@ -30,8 +30,6 @@ export default function LoginForm() {
 
       if (user.role === "admin") {
         navigate("/admin/dashboard");
-      } else if (user.role === "customer") {
-        navigate("/customer/home");
       } else {
         navigate("/");
       }

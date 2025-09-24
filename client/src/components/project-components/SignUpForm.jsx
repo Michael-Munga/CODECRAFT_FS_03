@@ -45,7 +45,7 @@ export default function SignUpForm() {
       localStorage.setItem("user", JSON.stringify(user));
 
       // Redirect
-      navigate("/");
+      navigate("/shop");
     } catch (error) {
       console.error(error);
       alert(error.response?.data?.message || "Signup failed. Try again.");
