@@ -1,20 +1,44 @@
 import { useState } from "react";
 import { Mail, Lock, Eye, EyeOff, Loader2 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import api from "@/services/api";
 
 export default function LoginForm() {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(""); 
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setTimeout(() => {
-      alert("Welcome back to The Vintage Closet!");
+    setError("");
+
+    try {
+      const res = await api.post("/auth/login", { email, password });
+
+      const { access_token, user } = res.data;
+
+      if (access_token) {
+        localStorage.setItem("access_token", access_token);
+        localStorage.setItem("role", user.role);
+      }
+
+      if (user.role === "admin") {
+        navigate("/admin/dashboard");
+      } else if (user.role === "customer") {
+        navigate("/customer/home");
+      } else {
+        navigate("/");
+      }
+    } catch (err) {
+      setError("Invalid email or password"); 
+      console.error(err);
+    } finally {
       setLoading(false);
-    }, 2000);
+    }
   };
 
   return (
@@ -95,6 +119,9 @@ export default function LoginForm() {
                     </button>
                   </div>
                 </div>
+
+                {/* Error Message */}
+                {error && <p className="text-sm text-red-600">{error}</p>}
 
                 {/* Submit Button */}
                 <button
