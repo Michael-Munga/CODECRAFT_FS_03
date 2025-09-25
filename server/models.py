@@ -28,7 +28,7 @@ class User(db.Model, SerializerMixin):
     password_hash = db.Column(db.String(200), nullable=False)
     role = db.Column(db.String(20), default="customer")  
     created_at = db.Column(db.DateTime, default=datetime.now)
-
+    phone_number = db.Column(db.String(20), unique=True, nullable=False)
     carts = relationship("Cart", back_populates="user")
     orders = relationship("Order", back_populates="user")
 
@@ -51,6 +51,12 @@ class User(db.Model, SerializerMixin):
         value = value.strip().lower()
         if not re.match(r"^[^@]+@[^@]+\.[^@]+$", value):
             raise ValueError("Invalid email")
+        return value
+    
+    @validates("phone_number")
+    def validate_phone(self, key, value):
+        if value and not re.match(r"^\+?\d{7,15}$", value):
+            raise ValueError("Invalid phone number format")
         return value
 
 # CATEGORY MODEl

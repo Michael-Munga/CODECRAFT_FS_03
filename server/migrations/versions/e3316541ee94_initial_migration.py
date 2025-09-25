@@ -1,8 +1,8 @@
 """initial migration
 
-Revision ID: d7327ec6310a
+Revision ID: e3316541ee94
 Revises: 
-Create Date: 2025-09-23 14:00:40.263656
+Create Date: 2025-09-25 09:38:16.757515
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'd7327ec6310a'
+revision = 'e3316541ee94'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -30,14 +30,14 @@ def upgrade():
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('first_name', sa.String(length=50), nullable=False),
     sa.Column('last_name', sa.String(length=50), nullable=False),
-    sa.Column('username', sa.String(length=50), nullable=False),
     sa.Column('email', sa.String(length=100), nullable=False),
     sa.Column('password_hash', sa.String(length=200), nullable=False),
     sa.Column('role', sa.String(length=20), nullable=True),
     sa.Column('created_at', sa.DateTime(), nullable=True),
+    sa.Column('phone_number', sa.String(length=20), nullable=False),
     sa.PrimaryKeyConstraint('id', name=op.f('pk_users')),
     sa.UniqueConstraint('email', name=op.f('uq_users_email')),
-    sa.UniqueConstraint('username', name=op.f('uq_users_username'))
+    sa.UniqueConstraint('phone_number', name=op.f('uq_users_phone_number'))
     )
     op.create_table('carts',
     sa.Column('id', sa.Integer(), nullable=False),

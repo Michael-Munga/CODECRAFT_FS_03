@@ -13,6 +13,7 @@ class AuthResorce(Resource):
         password = data.get("password", "")
         first_name = data.get("first_name", "").strip()
         last_name = data.get("last_name", "").strip()
+        phone_number = data.get("phone_number", "").strip()
 
         if not email or not password:
             return {"error": "Email and Password are required"}, 400
@@ -47,14 +48,19 @@ class AuthResorce(Resource):
         if action == "register":
             if not first_name or not last_name:
                 return {"error": "First and Last name are required"}, 400
+            if not phone_number:
+                return {"error": "Phone number is required"}, 400
             if User.query.filter_by(email=email).first():
                 return {"error": "Email already exists"}, 409
+            if User.query.filter_by(phone_number=phone_number).first():
+                return {"error": "Phone number already exists"}, 409
 
             new_user = User(
                 first_name=first_name,
                 last_name=last_name,
                 email=email,
-                role="customer"
+                role="customer",
+                phone_number=phone_number
             )
             new_user.set_password(password)
             db.session.add(new_user)
@@ -68,7 +74,8 @@ class AuthResorce(Resource):
                     "id": new_user.id,
                     "email": new_user.email,
                     "role": new_user.role,
-                    "name": new_user.full_name 
+                    "name": new_user.full_name,
+                    "phone": new_user.phone_number
                 },
                 "access_token": token,
                 "redirect_url": "/"

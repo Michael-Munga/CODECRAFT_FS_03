@@ -9,6 +9,7 @@ from flask_jwt_extended import JWTManager
 
 from models import db,bcrypt
 from resources.auth import AuthResorce
+from resources.products import ProductListResource
 
 
 
@@ -39,7 +40,7 @@ api = Api(app)
 
 
 api.add_resource(AuthResorce, '/auth/<string:action>')
-
+api.add_resource(ProductListResource, "/api/products")
 # Entry point
 if __name__ == "__main__":
     app.run(port=5555, debug=True)
