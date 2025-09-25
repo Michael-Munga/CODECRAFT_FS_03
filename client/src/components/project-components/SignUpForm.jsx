@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Mail, Lock, Eye, EyeOff, Loader2, User, Phone } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "@/services/api";
+import { toast } from "sonner";
 
 export default function SignUpForm() {
   const [formData, setFormData] = useState({
@@ -24,7 +25,15 @@ export default function SignUpForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (formData.password !== formData.confirmPassword) {
-      alert("Passwords do not match!");
+      toast.error("Passwords do not match!", {
+        style: {
+          background: "(white)",
+          color: "rose",
+          borderRadius: "12px",
+          fontFamily: "Oswald, sans-serif",
+        },
+        duration: 4000,
+      });
       return;
     }
     setLoading(true);
@@ -34,7 +43,7 @@ export default function SignUpForm() {
         first_name: formData.firstName,
         last_name: formData.lastName,
         email: formData.email,
-        phone: formData.phone,
+        phone_number: formData.phone,
         password: formData.password,
       });
 
@@ -44,11 +53,34 @@ export default function SignUpForm() {
       localStorage.setItem("token", access_token);
       localStorage.setItem("user", JSON.stringify(user));
 
+      //  Success toast
+      toast.success("Account created successfully!", {
+        style: {
+          background: "white)",
+          color: "green",
+          borderRadius: "12px",
+          fontFamily: "Oswald, sans-serif",
+        },
+        duration: 4000,
+      });
+
       // Redirect
-      navigate("/shop");
+      navigate("/");
     } catch (error) {
-      console.error(error);
-      alert(error.response?.data?.message || "Signup failed. Try again.");
+      toast.error(
+        error.response?.data?.error ||
+          error.response?.data?.message ||
+          "Signup failed. Try again.",
+        {
+          style: {
+            background: "white)",
+            color: "rosse",
+            borderRadius: "12px",
+            fontFamily: "Oswald, sans-serif",
+          },
+          duration: 4000,
+        }
+      );
     } finally {
       setLoading(false);
     }

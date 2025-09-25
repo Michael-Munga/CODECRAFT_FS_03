@@ -4,6 +4,8 @@ import { Link, useNavigate } from "react-router-dom";
 import api from "@/services/api";
 import { useContext } from "react";
 import { UserContext } from "@/context/UserContext";
+import { toast } from "sonner";
+
 
 export default function LoginForm() {
   const { setUser } = useContext(UserContext);
@@ -32,6 +34,17 @@ export default function LoginForm() {
         localStorage.setItem("access_token", access_token);
         localStorage.setItem("user", JSON.stringify(userData));
         setUser(userData);
+
+        //  Success toast
+        toast.success("Acount Logged in successfully!", {
+          style: {
+            background: "white)",
+            color: "green",
+            borderRadius: "12px",
+            fontFamily: "Oswald, sans-serif",
+          },
+          duration: 4000,
+        });
       }
 
       if (user.role === "admin") {
@@ -40,7 +53,24 @@ export default function LoginForm() {
         navigate("/");
       }
     } catch (err) {
-      setError("Invalid email or password");
+      const message =
+        err.response?.data?.error ||
+        err.response?.data?.message ||
+        "Invalid email or password";
+
+      setError(message);
+
+      // Error toast
+      toast.error(message, {
+        style: {
+          background: "white)",
+          color: "rose",
+          borderRadius: "12px",
+          fontFamily: "Oswald, sans-serif",
+        },
+        duration: 4000,
+      });
+
       console.error(err);
     } finally {
       setLoading(false);

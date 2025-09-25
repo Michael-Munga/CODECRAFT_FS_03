@@ -5,8 +5,9 @@ import Navbar from "./components/project-components/Navbar";
 import Approutes from "./Routes/Approutes";
 import Footer from "./components/project-components/Footer";
 
-import { CartProvider } from "@/context/CartContext"
+import { CartProvider } from "@/context/CartContext";
 import { UserProvider } from "./context/UserContext";
+import { Toaster } from "sonner";
 
 export default function App() {
   return (
@@ -25,6 +26,8 @@ export default function App() {
             </main>
             <Footer />
           </div>
+
+          <Toaster position="top-center" richColors />
         </SidebarProvider>
       </CartProvider>
     </UserProvider>
