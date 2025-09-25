@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 from flask_jwt_extended import JWTManager
 
 from models import db,bcrypt
+from resources.auth import AuthResorce
 
 
 
@@ -37,7 +38,7 @@ api = Api(app)
 # resources
 
 
-
+api.add_resource(AuthResorce, '/auth/<string:action>')
 
 # Entry point
 if __name__ == "__main__":
