@@ -1,6 +1,6 @@
 import { useId, useState, useEffect } from "react";
 import { SearchIcon, ShoppingCart, User } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 
 import { Input } from "@/components/ui/input";
 import {
@@ -15,7 +15,7 @@ import useCart from "@/hooks/useCart";
 
 // Navigation links array
 const navigationLinks = [
-  { to: "/", label: "Home", active: true },
+  { to: "/", label: "Home" },
   { to: "/products", label: "Shop" },
   { to: "/new-arrivals", label: "New Arrivals" },
   { to: "/about", label: "About Us" },
@@ -28,6 +28,7 @@ export default function Navbar() {
   const itemCount = cart.reduce((sum, item) => sum + item.qty, 0);
 
   const navigate = useNavigate();
+  const location = useLocation(); 
   const [user, setUser] = useState(null);
 
   // Load user from localStorage on mount
@@ -81,21 +82,24 @@ export default function Navbar() {
           {/* Navigation menu */}
           <NavigationMenu>
             <NavigationMenuList className="gap-4">
-              {navigationLinks.map((link) => (
-                <NavigationMenuItem key={link.to}>
-                  <NavigationMenuLink
-                    active={link.active}
-                    asChild
-                    className={`px-3 py-1.5 font-medium text-stone-700 transition-colors ${
-                      link.active
-                        ? "text-amber-700 border-b-2 border-amber-700"
-                        : "hover:text-rose-700"
-                    }`}
-                  >
-                    <Link to={link.to}>{link.label}</Link>
-                  </NavigationMenuLink>
-                </NavigationMenuItem>
-              ))}
+              {navigationLinks.map((link) => {
+                const isActive = location.pathname === link.to; 
+                return (
+                  <NavigationMenuItem key={link.to}>
+                    <NavigationMenuLink
+                      active={isActive}
+                      asChild
+                      className={`px-3 py-1.5 font-medium text-stone-700 transition-colors ${
+                        isActive
+                          ? "text-amber-700 border-b-2 border-amber-700"
+                          : "hover:text-rose-700"
+                      }`}
+                    >
+                      <Link to={link.to}>{link.label}</Link>
+                    </NavigationMenuLink>
+                  </NavigationMenuItem>
+                );
+              })}
             </NavigationMenuList>
           </NavigationMenu>
 

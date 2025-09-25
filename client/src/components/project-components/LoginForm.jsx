@@ -2,8 +2,11 @@ import { useState } from "react";
 import { Mail, Lock, Eye, EyeOff, Loader2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "@/services/api";
+import { useContext } from "react";
+import { UserContext } from "@/context/UserContext";
 
 export default function LoginForm() {
+  const { setUser } = useContext(UserContext);
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -21,11 +24,14 @@ export default function LoginForm() {
 
       const { access_token, user } = res.data;
       if (access_token) {
+        const userData = {
+          name: user.name,
+          email: user.email,
+          role: user.role,
+        };
         localStorage.setItem("access_token", access_token);
-        localStorage.setItem(
-          "user",
-          JSON.stringify({ name: user.name, email: user.email })
-        );
+        localStorage.setItem("user", JSON.stringify(userData));
+        setUser(userData);
       }
 
       if (user.role === "admin") {
