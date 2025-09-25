@@ -29,7 +29,7 @@ export default function ProductCard({ product, addToCart }) {
       {/* Product Image */}
       <div className=" px-1.5  h-64 overflow-hidden rounded-lg">
         <img
-          src={product.image}
+          src={product.image_url}
           alt={product.name}
           className="w-full h-full object-cover"
         />
