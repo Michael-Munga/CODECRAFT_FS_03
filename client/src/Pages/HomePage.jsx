@@ -1,10 +1,41 @@
 import React from "react";
 import TasteCardGrid from "@/components/project-components/TasteCardGrid";
-import sampleProducts from "@/Data/Products";
+import api from "@/services/api";
 import ProductCard from "@/components/project-components/ProductCard";
+import { useState, useEffect } from "react";
+import useCart from "@/hooks/useCart";
 
 export default function HomePage() {
-  const bestSellers = sampleProducts.slice(0, 4);
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const { addToCart } = useCart();
+  const bestSellers = products.slice(0, 4);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const res = await api.get("/products");
+        setProducts(res.data);
+      } catch (err) {
+        console.error(err);
+        setError("Failed to load products.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
+
+  if (loading) {
+    return <p className="text-center text-lg">Loading products...</p>;
+  }
+
+  if (error) {
+    return <p className="text-center text-red-600">{error}</p>;
+  }
+
   return (
     <div className="flex flex-col items-center min-h-screen p-6">
       {/* Text content */}
@@ -36,7 +67,11 @@ export default function HomePage() {
       {/* Best Seller products */}
       <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 w-full max-w-7xl">
         {bestSellers.map((product) => (
-          <ProductCard key={product.name} product={product} />
+          <ProductCard
+            key={product.name}
+            product={product}
+            addToCart={addToCart}
+          />
         ))}
       </div>
     </div>
