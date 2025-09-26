@@ -1,5 +1,4 @@
 import React from "react";
-import { SidebarProvider } from "./components/ui/sidebar";
 import { CartProvider } from "@/context/CartContext";
 import { UserProvider } from "./context/UserContext";
 import { Toaster } from "sonner";
@@ -9,10 +8,8 @@ export default function App() {
   return (
     <UserProvider>
       <CartProvider>
-        <SidebarProvider>
-          <Layout />
-          <Toaster position="top-center" richColors />
-        </SidebarProvider>
+        <Layout />
+        <Toaster position="top-center" richColors />
       </CartProvider>
     </UserProvider>
   );
