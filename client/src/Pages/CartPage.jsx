@@ -1,9 +1,9 @@
-import { ShoppingCart } from "lucide-react";
+import { ShoppingCart, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import useCart from "@/hooks/useCart";
 
 export default function CartPage() {
-  const { cart, increaseQty, decreaseQty } = useCart();
+  const { cart, increaseQty, decreaseQty, removeFromCart } = useCart();
   const total = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
 
   return (
@@ -28,7 +28,7 @@ export default function CartPage() {
               key={item.id}
               className="flex items-center justify-between border-b pb-4"
             >
-              {/* Product Info (Left) */}
+              {/* Product Info */}
               <div className="flex items-center gap-4 flex-1">
                 <img
                   src={item.image}
@@ -41,7 +41,7 @@ export default function CartPage() {
                 </div>
               </div>
 
-              {/* Quantity Controls (Center) */}
+              {/* Quantity Controls  */}
               <div className="flex items-center gap-3 flex-1 justify-center">
                 <button
                   onClick={() => decreaseQty(item.id)}
@@ -58,11 +58,17 @@ export default function CartPage() {
                 </button>
               </div>
 
-              {/* Subtotal*/}
-              <div className="flex-1 text-right">
+              {/* Subtotal and Delete button */}
+              <div className="flex items-center gap-4 flex-1 justify-end">
                 <p className="font-semibold text-stone-800">
                   ${item.qty * item.price}
                 </p>
+                <button
+                  onClick={() => removeFromCart(item.id)}
+                  className="p-2 text-red-600 hover:text-red-800 transition"
+                >
+                  <Trash2 size={20} />
+                </button>
               </div>
             </div>
           ))}
