@@ -69,6 +69,8 @@ class Category(db.Model, SerializerMixin):
     created_at = db.Column(db.DateTime, default=datetime.now)
 
     products = relationship("Product", back_populates="category")
+    serialize_rules = ('-products.category',)
+    
 
 # PRODUCT MODEL
 class Product(db.Model, SerializerMixin):
@@ -80,12 +82,14 @@ class Product(db.Model, SerializerMixin):
     price = db.Column(db.Float, nullable=False)
     stock = db.Column(db.Integer, default=0)
     created_at = db.Column(db.DateTime, default=datetime.now)
-
+    image_url = db.Column(db.String)
     category_id = db.Column(db.Integer, db.ForeignKey('categories.id'))
     category = relationship("Category", back_populates="products")
 
     cart_items = relationship("CartItem", back_populates="product")
     order_items = relationship("OrderItem", back_populates="product")
+
+    serialize_rules = ('-cart_items.product', '-order_items.product', '-category.products')
 
 # CART MODEL
 class Cart(db.Model, SerializerMixin):
@@ -98,6 +102,8 @@ class Cart(db.Model, SerializerMixin):
     user = relationship("User", back_populates="carts")
     items = relationship("CartItem", back_populates="cart", cascade="all, delete-orphan")
 
+    serialize_rules = ("-items.cart",)
+
 
 class CartItem(db.Model, SerializerMixin):
     __tablename__ = 'cart_items'
@@ -109,6 +115,8 @@ class CartItem(db.Model, SerializerMixin):
 
     cart = relationship("Cart", back_populates="items")
     product = relationship("Product", back_populates="cart_items")
+
+    serialize_rules = ("-cart.items", "-product.cart_items")
 
 # ORDER MODEL
 class Order(db.Model, SerializerMixin):
