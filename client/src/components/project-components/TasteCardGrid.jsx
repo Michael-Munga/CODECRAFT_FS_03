@@ -1,4 +1,5 @@
-import React from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import React, { useState } from "react";
 
 const categories = [
   {
@@ -36,26 +37,63 @@ const categories = [
 ];
 
 export default function TasteCardGrid() {
-  return (
-    <div className="mt-6 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 w-full px-2">
-      {categories.map((cat, title) => (
-        <div
-          key={title}
-          className="relative rounded-lg overflow-hidden shadow-md group hover:scale-105 transition-transform"
-        >
-          <img
-            src={cat.img}
-            alt={cat.title}
-            className="w-full h-80 object-cover"
-          />
+  const [activeCard, setActiveCard] = useState(0);
 
-          <div className="absolute bottom-0 w-full bg-gradient-to-t from-black/70 to-transparent p-2">
-            <h2 className="text-lg font-semibold text-white text-center">
-              {cat.title}
-            </h2>
-          </div>
-        </div>
-      ))}
+  return (
+    <div className="flex w-full items-center justify-center overflow-x-auto px-4 py-8">
+      <div className="flex gap-2">
+        {categories.map((cat, index) => (
+          <motion.div
+            key={index}
+            className="relative cursor-pointer overflow-hidden rounded-2xl"
+            initial={{ width: "4rem", height: "20rem" }}
+            animate={{
+              width: activeCard === index ? "20rem" : "4rem",
+              height: "20rem",
+            }}
+            transition={{ duration: 0.35, ease: "easeInOut" }}
+            onHoverStart={() => setActiveCard(index)}
+            onClick={() => setActiveCard(index)}
+          >
+            {/* Gradient Overlay */}
+            <AnimatePresence>
+              {activeCard === index && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"
+                />
+              )}
+            </AnimatePresence>
+
+            {/* Title */}
+            <AnimatePresence>
+              {activeCard === index && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 20 }}
+                  transition={{ duration: 0.4 }}
+                  className="absolute bottom-4 left-0 w-full text-center"
+                >
+                  <h2 className="text-xl font-bold text-white drop-shadow-lg">
+                    {cat.title}
+                  </h2>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Image */}
+            <img
+              src={cat.img}
+              alt={cat.title}
+              className="h-full w-full object-cover"
+            />
+          </motion.div>
+        ))}
+      </div>
     </div>
   );
 }
