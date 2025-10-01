@@ -4,6 +4,8 @@ import api from "@/services/api";
 import ProductCard from "@/components/project-components/ProductCard";
 import { useState, useEffect } from "react";
 import useCart from "@/hooks/useCart";
+import NewArrivals from "@/components/project-components/NewArrivals";
+
 
 export default function HomePage() {
   const [products, setProducts] = useState([]);
@@ -59,6 +61,7 @@ export default function HomePage() {
       </div> */}
 
       <TasteCardGrid />
+      <NewArrivals/>
       {/* Best Seller section */}
       <div className="mt-20 flex justify-center w-full">
         <h1 className="text-6xl font-bold text-rose-950 smokum">Best Seller</h1>
