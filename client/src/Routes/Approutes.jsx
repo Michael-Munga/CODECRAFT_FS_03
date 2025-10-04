@@ -1,12 +1,12 @@
 import React from "react";
 import { Route, Routes } from "react-router-dom";
-import LoginPage from "@/Pages/LoginPage";
-import SignUpPage from "@/Pages/SignUpPage";
-import HomePage from "@/Pages/HomePage";
-import ProductsPage from "@/Pages/ProductsPage";
-import CartPage from "@/Pages/CartPage";
-import AboutPage from "@/Pages/AboutPage";
-import ContactPage from "@/Pages/ContactPage";
+import LoginPage from "@/Pages/customer/LoginPage";
+import SignUpPage from "@/Pages/customer/SignUpPage";
+import HomePage from "@/Pages/customer/HomePage";
+import ProductsPage from "@/Pages/customer/ProductsPage";
+import CartPage from "@/Pages/customer/CartPage";
+import AboutPage from "@/Pages/customer/AboutPage";
+import ContactPage from "@/Pages/customer/ContactPage";
 
 export default function Approutes() {
   return (
