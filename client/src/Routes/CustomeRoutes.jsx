@@ -8,7 +8,7 @@ import CartPage from "@/Pages/customer/CartPage";
 import AboutPage from "@/Pages/customer/AboutPage";
 import ContactPage from "@/Pages/customer/ContactPage";
 
-export default function Approutes() {
+export default function CustomerRoutes() {
   return (
     <Routes>
       <Route path="/" element={<HomePage />} />

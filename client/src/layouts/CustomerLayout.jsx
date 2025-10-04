@@ -1,6 +1,6 @@
 import React from "react";
 import Navbar from "@/components/project-components/Navbar";
-import Approutes from "@/Routes/Approutes";
+import CustomerRoutes from "@/Routes/CustomeRoutes";
 import Footer from "@/components/project-components/Footer";
 
 export default function Layout() {
@@ -9,7 +9,7 @@ export default function Layout() {
       <div className=" min-h-screen w-full">
         <Navbar />
         <main className="flex-1 w-full">
-          <Approutes />
+          <CustomerRoutes />
         </main>
         <Footer />
       </div>
