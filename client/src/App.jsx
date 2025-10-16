@@ -1,14 +1,14 @@
 import React from "react";
 import { CartProvider } from "@/context/CartContext";
-import { UserProvider } from "./context/UserContext";
+import { UserProvider } from "@/context/UserContext";
 import { Toaster } from "sonner";
-import Layout from "./layouts/CustomerLayout";
+import AppRoutes from "@/Routes/AppRoutes";
 
 export default function App() {
   return (
     <UserProvider>
       <CartProvider>
-        <Layout />
+        <AppRoutes />
         <Toaster position="top-center" richColors />
       </CartProvider>
     </UserProvider>
