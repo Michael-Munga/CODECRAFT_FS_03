@@ -21,29 +21,37 @@ import {
 
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import ConfirmDialog from "@/components/common/ConfirmDialog";
+import EditProductDialog from "@/components/admin/EditProductDialog";
 
 export default function AdminProducts() {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [sorting, setSorting] = useState([]);
+  const [categories, setCategories] = useState([]);
 
   useEffect(() => {
-    async function fetchProducts() {
+    async function fetchProductsAndCategories() {
       setLoading(true);
       setError(null);
       try {
-        const res = await api.get("/admin/products");
-        setData(res.data);
+        const [productsRes, categoriesRes] = await Promise.all([
+          api.get("/admin/products"),
+          api.get("/admin/categories"),
+        ]);
+
+        setData(productsRes.data);
+        setCategories(categoriesRes.data);
       } catch (err) {
         console.error(err);
-        setError(err.response?.data?.message || "Failed to load products.");
-        toast.error("Error fetching products.");
+        setError(err.response?.data?.message || "Failed to load data.");
+        toast.error("Error fetching products or categories.");
       } finally {
         setLoading(false);
       }
     }
-    fetchProducts();
+
+    fetchProductsAndCategories();
   }, []);
 
   const handleDelete = async (id) => {
@@ -136,24 +144,20 @@ export default function AdminProducts() {
         );
       },
     },
-    {
-      header: "Created",
-      accessorKey: "created_at",
-      cell: ({ row }) => {
-        const date = new Date(row.getValue("created_at"));
-        return <span>{date.toLocaleDateString()}</span>;
-      },
-    },
+
     {
       header: "Actions",
       cell: ({ row }) => (
         <div className="flex gap-3">
-          <button
-            onClick={() => toast.info("Edit coming soon...")}
-            className="text-blue-600 hover:underline flex items-center gap-1"
-          >
-            <Pencil size={14} /> Edit
-          </button>
+          <EditProductDialog
+            product={row.original}
+            categories={categories}
+            onUpdate={(id, updatedData) =>
+              setData((prev) =>
+                prev.map((p) => (p.id === id ? { ...p, ...updatedData } : p))
+              )
+            }
+          />
 
           <ConfirmDialog
             title="Delete Product"
