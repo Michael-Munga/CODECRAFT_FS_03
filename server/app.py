@@ -9,10 +9,10 @@ from flask_jwt_extended import JWTManager
 
 from models import db,bcrypt
 from resources.auth import AuthResorce
-from resources.products import ProductListResource
+from resources.customer.products import ProductListResource
 from resources.cart import CartItemResource,CartResource
-
-
+from resources.admin.admin_products import AdminProductsResource
+from resources.admin.categories import CategoriesResource
 
 
 
@@ -44,8 +44,8 @@ api.add_resource(AuthResorce, '/auth/<string:action>')
 api.add_resource(ProductListResource, "/products")
 api.add_resource(CartResource, '/cart')               
 api.add_resource(CartItemResource, '/cart/item/<int:item_id>') 
-
-
+api.add_resource(AdminProductsResource, '/admin/products', '/admin/products/<int:id>')
+api.add_resource(CategoriesResource, '/admin/categories', '/admin/categories/<int:id>')
 
 # Entry point
 if __name__ == "__main__":

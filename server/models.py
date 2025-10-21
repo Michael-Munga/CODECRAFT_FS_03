@@ -91,6 +91,45 @@ class Product(db.Model, SerializerMixin):
 
     serialize_rules = ('-cart_items.product', '-order_items.product', '-category.products')
 
+
+    @validates("price")
+    def validate_price(self, key, value):
+        try:
+            value = float(value)
+        except (TypeError, ValueError):
+            raise ValueError("Price must be a valid number")
+
+        if value < 0:
+            raise ValueError("Price must be a positive number")
+        return value
+
+
+    @validates("stock")
+    def validate_stock(self, key, value):
+        try:
+            value = int(value)
+        except (TypeError, ValueError):
+            raise ValueError("Stock must be a valid integer")
+
+        if value < 0:
+            raise ValueError("Stock must be a positive integer")
+        return value
+
+   
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "price": self.price,
+            "stock": self.stock,
+            "image_url": self.image_url,
+            "category": {
+                "id": self.category.id,
+                "name": self.category.name
+            } if self.category else None,
+            
+        }
+
 # CART MODEL
 class Cart(db.Model, SerializerMixin):
     __tablename__ = 'carts'
