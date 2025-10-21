@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   ShoppingCart,
   Package,
@@ -6,8 +6,27 @@ import {
   DollarSign,
   TrendingUp,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import api from "@/services/api";
+import { toast } from "sonner";
 
 export default function AdminMainContent() {
+  const navigate = useNavigate();
+  const [productCount, setProductCount] = useState(0);
+
+  useEffect(() => {
+    async function fetchProductCount() {
+      try {
+        const res = await api.get("/admin/products");
+        setProductCount(res.data.length);
+      } catch (err) {
+        console.error(err);
+        toast.error("Failed to load product count");
+      }
+    }
+    fetchProductCount();
+  }, []);
+
   const stats = [
     {
       title: "Total Sales",
@@ -23,9 +42,10 @@ export default function AdminMainContent() {
     },
     {
       title: "Products",
-      value: "89",
-      subtitle: "23 vintage items",
+      value: productCount.toString(),
+      subtitle: "Total active products",
       icon: Package,
+      route: "/admin/products",
     },
     {
       title: "Customers",
@@ -112,6 +132,7 @@ export default function AdminMainContent() {
         {stats.map((stat, idx) => (
           <div
             key={idx}
+            onClick={() => stat.route && navigate(stat.route)}
             className="bg-[#fffaf5] rounded-lg border border-[#e2d7c6] p-5 shadow-sm"
           >
             <div className="flex justify-between items-center mb-2">

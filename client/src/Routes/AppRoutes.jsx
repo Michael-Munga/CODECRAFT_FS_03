@@ -16,6 +16,7 @@ import ContactPage from "@/Pages/customer/ContactPage";
 
 // Admin pages
 import AdminDashboard from "@/Pages/admin/AdminDashboard";
+import AdminProducts from "@/Pages/admin/AdminProducts";
 
 // Auth route protection
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
@@ -39,6 +40,7 @@ export default function AppRoutes() {
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<Navigate to="/admin/dashboard" replace />} />
           <Route path="dashboard" element={<AdminDashboard />} />
+          <Route path="products" element={<AdminProducts />} />
         </Route>
       </Route>
 
