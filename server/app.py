@@ -47,6 +47,18 @@ api.add_resource(CartItemResource, '/cart/item/<int:item_id>')
 api.add_resource(AdminProductsResource, '/admin/products', '/admin/products/<int:id>')
 api.add_resource(CategoriesResource, '/admin/categories', '/admin/categories/<int:id>')
 api.add_resource(AdminCustomersResource, "/admin/customers")
+
+# Root route
+@app.route("/")
+def home():
+    return "Flask backend is running!"
+
+# Health check route for Render
+@app.route("/healthz")
+def health_check():
+    return "OK", 200
+
+
 # Entry point
 if __name__ == "__main__":
     app.run(port=5555, debug=True)
