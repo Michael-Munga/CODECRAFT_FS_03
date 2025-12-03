@@ -13,7 +13,7 @@ from resources.customer.products import ProductListResource
 from resources.cart import CartItemResource,CartResource
 from resources.admin.admin_products import AdminProductsResource
 from resources.admin.categories import CategoriesResource
-
+from resources.admin.customers import AdminCustomersResource
 
 
 # load env variables 
@@ -46,7 +46,7 @@ api.add_resource(CartResource, '/cart')
 api.add_resource(CartItemResource, '/cart/item/<int:item_id>') 
 api.add_resource(AdminProductsResource, '/admin/products', '/admin/products/<int:id>')
 api.add_resource(CategoriesResource, '/admin/categories', '/admin/categories/<int:id>')
-
+api.add_resource(AdminCustomersResource, "/admin/customers")
 # Entry point
 if __name__ == "__main__":
     app.run(port=5555, debug=True)

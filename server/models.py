@@ -5,6 +5,8 @@ from sqlalchemy_serializer import SerializerMixin
 from flask_bcrypt import Bcrypt
 from datetime import datetime
 import re
+from flask_bcrypt import check_password_hash
+from flask_bcrypt import generate_password_hash
 
 # Naming convention for migrations
 db = SQLAlchemy(metadata=MetaData(naming_convention={
@@ -39,11 +41,9 @@ class User(db.Model, SerializerMixin):
         return f"{self.first_name} {self.last_name}"
 
     def set_password(self, raw_password):
-        from flask_bcrypt import generate_password_hash
         self.password_hash = generate_password_hash(raw_password).decode('utf-8')
 
     def verify_password(self, raw_password):
-        from flask_bcrypt import check_password_hash
         return check_password_hash(self.password_hash, raw_password)
 
     @validates("email")
