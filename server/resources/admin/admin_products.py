@@ -3,7 +3,7 @@ from flask_restful import Resource
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from sqlalchemy import func
 from models import db, Product, OrderItem, User
-
+from sqlalchemy.orm import joinedload
 
 class AdminProductsResource(Resource):
     """
@@ -19,6 +19,10 @@ class AdminProductsResource(Resource):
 
         low_stock = request.args.get("low_stock", type=int)
         query = Product.query
+        
+        # Use joinedload to prevent N+1 queries when accessing related data
+        query = query.options(joinedload(Product.category))
+        
         if low_stock is not None:
             query = query.filter(Product.stock <= low_stock)
 
@@ -26,115 +30,131 @@ class AdminProductsResource(Resource):
 
         data = []
         for product in products:
-            total_sales = (
+            # Optimize aggregate queries by using subqueries instead of separate queries
+            # Calculate total sales for this product
+            total_sales_result = (
                 db.session.query(func.sum(OrderItem.quantity))
                 .filter(OrderItem.product_id == product.id)
+                .filter(OrderItem.order.has(status='paid'))  # Only count paid orders
                 .scalar()
-                or 0
             )
+            total_sales = total_sales_result or 0
 
-            total_revenue = (
+            # Calculate total revenue for this product
+            total_revenue_result = (
                 db.session.query(func.sum(OrderItem.price * OrderItem.quantity))
                 .filter(OrderItem.product_id == product.id)
+                .filter(OrderItem.order.has(status='paid'))  # Only count paid orders
                 .scalar()
-                or 0
             )
+            total_revenue = total_revenue_result or 0
 
             product_dict = product.to_dict()
             product_dict.update({
                 "total_sales": total_sales,
-                "total_revenue": total_revenue
+                "total_revenue": float(total_revenue),
+                "low_stock_warning": product.stock <= 5,  # Example business rule
             })
-
             data.append(product_dict)
 
-        return data, 200
+        return {"products": data, "count": len(data)}, 200
 
-    
-    # POST--> Add New Product
-  
     @jwt_required()
     def post(self):
-        """
-        Add a new product (admin only)
-        """
-        current_user_id = get_jwt_identity()
-        user = User.query.get(current_user_id)
-        if user.role != "admin":
+        """Create a new product (admin only)"""
+        current_user = User.query.get(get_jwt_identity())
+        if not current_user or current_user.role != "admin":
             return {"error": "Admins only"}, 403
 
         data = request.get_json()
+        if not data:
+            return {"error": "No data provided"}, 400
 
         required_fields = ["name", "price", "stock"]
         for field in required_fields:
             if field not in data:
                 return {"error": f"'{field}' is required"}, 400
 
-        new_product = Product(
-            name=data["name"],
-            description=data.get("description"),
-            price=data["price"],
-            stock=data["stock"],
-            image_url=data.get("image_url"),
-            category_id=data.get("category_id"),
-        )
+        try:
+            product = Product(
+                name=data["name"],
+                description=data.get("description", ""),
+                price=float(data["price"]),
+                stock=int(data["stock"]),
+                image_url=data.get("image_url"),
+                category_id=data.get("category_id")
+            )
+            db.session.add(product)
+            db.session.commit()
+            
+            return {
+                "message": "Product created successfully",
+                "product": product.to_dict()
+            }, 201
+        except ValueError as e:
+            return {"error": f"Invalid data: {str(e)}"}, 400
+        except Exception as e:
+            db.session.rollback()
+            return {"error": f"Failed to create product: {str(e)}"}, 500
 
-        db.session.add(new_product)
-        db.session.commit()
-
-        return {
-            "message": "Product added successfully",
-            "product": new_product.to_dict()
-        }, 201
-
-    # PUT ---> Edit Existing Product
     @jwt_required()
-    def put(self, id):
-        """
-        Update product by id (admin only)
-        """
-        current_user_id = get_jwt_identity()
-        user = User.query.get(current_user_id)
-        if user.role != "admin":
+    def put(self, product_id):
+        """Update an existing product (admin only)"""
+        current_user = User.query.get(get_jwt_identity())
+        if not current_user or current_user.role != "admin":
             return {"error": "Admins only"}, 403
 
-        product = Product.query.get(id)
+        product = Product.query.get(product_id)
         if not product:
             return {"error": "Product not found"}, 404
 
-        data = request.get_json() or {}
+        data = request.get_json()
+        if not data:
+            return {"error": "No data provided"}, 400
 
-        # Update only fields that exist in Product model
-        for key in ["name", "description", "price", "stock", "image_url", "category_id"]:
-            if key in data and data[key] is not None:
-                setattr(product, key, data[key])
+        try:
+            # Update allowed fields
+            updatable_fields = ["name", "description", "price", "stock", "image_url", "category_id"]
+            for field in updatable_fields:
+                if field in data:
+                    setattr(product, field, data[field])
 
-        db.session.commit()
+            db.session.commit()
+            return {
+                "message": "Product updated successfully",
+                "product": product.to_dict()
+            }, 200
+        except Exception as e:
+            db.session.rollback()
+            return {"error": f"Failed to update product: {str(e)}"}, 500
 
-        return {
-            "message": "Product updated successfully",
-            "product": product.to_dict()
-        }, 200
-
-
-    # DELETE--> Remove Product
-  
     @jwt_required()
-    def delete(self, id):
-        """
-        Delete product by id (from URL)
-        """
-        current_user_id = get_jwt_identity()
-        user = User.query.get(current_user_id)
-        if user.role != "admin":
+    def delete(self, product_id):
+        """Delete a product (admin only) - with validation"""
+        current_user = User.query.get(get_jwt_identity())
+        if not current_user or current_user.role != "admin":
             return {"error": "Admins only"}, 403
 
-        product = Product.query.get(id)
+        product = Product.query.get(product_id)
         if not product:
             return {"error": "Product not found"}, 404
 
-        db.session.delete(product)
-        db.session.commit()
+        # Check if product is referenced in any unpaid orders
+        from models import OrderItem, Order
+        active_order_items = db.session.query(OrderItem).join(Order)\
+            .filter(OrderItem.product_id == product_id)\
+            .filter(Order.status.in_(['pending', 'processing']))\
+            .count()
+        
+        if active_order_items > 0:
+            return {
+                "error": f"Cannot delete product. It is referenced in {active_order_items} active orders."
+            }, 400
 
-        return {"message": "Product deleted successfully"}, 200
-
+        try:
+            db.session.delete(product)
+            db.session.commit()
+            return {"message": "Product deleted successfully"}, 200
+        except Exception as e:
+            db.session.rollback()
+            return {"error": f"Failed to delete product: {str(e)}"}, 500

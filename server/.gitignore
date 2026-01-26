@@ -55,3 +55,6 @@ coverage.xml
 *.cover
 *.py,cover
 .hypothesis/
+
+# Ignore markdown files
+*.md
