@@ -2,6 +2,7 @@ from flask import request
 from flask_restful import Resource
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from models import db, Category, User
+from utils.decorators import admin_required
 
 class CategoriesResource(Resource):
     def get(self, id=None):
@@ -18,16 +19,13 @@ class CategoriesResource(Resource):
         categories = Category.query.all()
         return [cat.to_dict() for cat in categories], 200
 
-    @jwt_required()
+    @admin_required
     def post(self):
         """
         POST /admin/categories
         Add a new category (admin only)
         """
-        current_user_id = get_jwt_identity()
-        user = User.query.get(current_user_id)
-        if not user or user.role != "admin":
-            return {"error": "Admins only"}, 403
+        pass  # Admin check handled by decorator
 
         data = request.get_json()
         name = data.get("name")
@@ -46,16 +44,13 @@ class CategoriesResource(Resource):
 
         return {"message": "Category added", "category": category.to_dict()}, 201
 
-    @jwt_required()
+    @admin_required
     def put(self, id):
         """
         PUT /admin/categories/<id>
         Update a category (admin only)
         """
-        current_user_id = get_jwt_identity()
-        user = User.query.get(current_user_id)
-        if not user or user.role != "admin":
-            return {"error": "Admins only"}, 403
+        pass  # Admin check handled by decorator
 
         category = Category.query.get(id)
         if not category:
@@ -68,16 +63,13 @@ class CategoriesResource(Resource):
         db.session.commit()
         return {"message": "Category updated", "category": category.to_dict()}, 200
 
-    @jwt_required()
+    @admin_required
     def delete(self, id):
         """
         DELETE /admin/categories/<id>
         Delete a category (admin only)
         """
-        current_user_id = get_jwt_identity()
-        user = User.query.get(current_user_id)
-        if not user or user.role != "admin":
-            return {"error": "Admins only"}, 403
+        pass  # Admin check handled by decorator
 
         category = Category.query.get(id)
         if not category:

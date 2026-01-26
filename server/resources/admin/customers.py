@@ -2,18 +2,15 @@ from flask import request
 from flask_restful import Resource
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from models import User
+from utils.decorators import admin_required
 
 class AdminCustomersResource(Resource):
     """
     Admin-only endpoint to view all customers.
     """
 
-    @jwt_required()
+    @admin_required
     def get(self):
-        current_user = User.query.get(get_jwt_identity())
-
-        if not current_user or current_user.role != "admin":
-            return {"error": "Admins only"}, 403
 
         customers = User.query.filter_by(role="customer").all()
 

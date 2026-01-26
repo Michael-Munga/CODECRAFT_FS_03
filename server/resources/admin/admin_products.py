@@ -4,6 +4,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from sqlalchemy import func
 from models import db, Product, OrderItem, User
 from sqlalchemy.orm import joinedload
+from utils.decorators import admin_required
 
 class AdminProductsResource(Resource):
     """
@@ -11,11 +12,8 @@ class AdminProductsResource(Resource):
     """
 
     # GET all products ( filter by low stock)
-    @jwt_required()
+    @admin_required
     def get(self):
-        current_user = User.query.get(get_jwt_identity())
-        if not current_user or current_user.role != "admin":
-            return {"error": "Admins only"}, 403
 
         low_stock = request.args.get("low_stock", type=int)
         query = Product.query
@@ -97,12 +95,10 @@ class AdminProductsResource(Resource):
             db.session.rollback()
             return {"error": f"Failed to create product: {str(e)}"}, 500
 
-    @jwt_required()
+    @admin_required
     def put(self, product_id):
         """Update an existing product (admin only)"""
-        current_user = User.query.get(get_jwt_identity())
-        if not current_user or current_user.role != "admin":
-            return {"error": "Admins only"}, 403
+        pass  # Admin check handled by decorator
 
         product = Product.query.get(product_id)
         if not product:
@@ -128,12 +124,10 @@ class AdminProductsResource(Resource):
             db.session.rollback()
             return {"error": f"Failed to update product: {str(e)}"}, 500
 
-    @jwt_required()
+    @admin_required
     def delete(self, product_id):
         """Delete a product (admin only) - with validation"""
-        current_user = User.query.get(get_jwt_identity())
-        if not current_user or current_user.role != "admin":
-            return {"error": "Admins only"}, 403
+        pass  # Admin check handled by decorator
 
         product = Product.query.get(product_id)
         if not product:
