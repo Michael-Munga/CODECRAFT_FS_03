@@ -17,6 +17,7 @@ gunicorn = "*"
 requests = "*"
 cryptography = "*"
 flask-marshmallow = "==1.2.1"
+flask-limiter = "*"  # Added for rate limiting
 
 [dev-packages]
 
