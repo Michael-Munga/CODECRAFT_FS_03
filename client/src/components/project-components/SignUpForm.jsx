@@ -1,5 +1,14 @@
 import { useState } from "react";
-import { Mail, Lock, Eye, EyeOff, Loader2, User, Phone } from "lucide-react";
+import {
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  Loader2,
+  User,
+  Phone,
+  AlertCircle,
+} from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "@/services/api";
 import { toast } from "sonner";
@@ -15,15 +24,41 @@ export default function SignUpForm() {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [passwordError, setPasswordError] = useState("");
   const navigate = useNavigate();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+
+    // Clear password error when user starts typing in password field
+    if (name === "password") {
+      if (value.length >= 8) {
+        setPasswordError("");
+      } else if (value.length > 0) {
+        setPasswordError("Password must be at least 8 characters long");
+      }
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Client-side validation
+    if (formData.password.length < 8) {
+      setPasswordError("Password must be at least 8 characters long");
+      toast.error("Password must be at least 8 characters long", {
+        style: {
+          background: "(white)",
+          color: "rose",
+          borderRadius: "12px",
+          fontFamily: "Oswald, sans-serif",
+        },
+        duration: 4000,
+      });
+      return;
+    }
+
     if (formData.password !== formData.confirmPassword) {
       toast.error("Passwords do not match!", {
         style: {
@@ -216,7 +251,9 @@ export default function SignUpForm() {
                       value={formData.password}
                       onChange={handleChange}
                       required
-                      className="block w-full rounded-lg border border-stone-300 bg-stone-50 py-3 pl-10 pr-12 text-sm text-stone-800 focus:border-amber-600 focus:ring-2 focus:ring-amber-600"
+                      className={`block w-full rounded-lg border ${
+                        passwordError ? "border-red-500" : "border-stone-300"
+                      } bg-stone-50 py-3 pl-10 pr-12 text-sm text-stone-800 focus:border-amber-600 focus:ring-2 focus:ring-amber-600`}
                       placeholder="Password"
                     />
                     <button
@@ -231,6 +268,12 @@ export default function SignUpForm() {
                       )}
                     </button>
                   </div>
+                  {passwordError && (
+                    <p className="mt-2 text-sm text-red-600 flex items-center">
+                      <AlertCircle className="h-4 w-4 mr-1" />
+                      {passwordError}
+                    </p>
+                  )}
                 </div>
 
                 {/* Confirm Password */}
