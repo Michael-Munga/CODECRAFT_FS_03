@@ -62,8 +62,10 @@ class AuthResource(Resource):
 
         # -------- REGISTER --------
         elif action == "register":
+            print(f"Received data: {data}")  # Debug print
             errors = RegisterSchema().validate(data)
             if errors:
+                print(f"Validation errors: {errors}")  # Debug print
                 return {"errors": errors}, 400
 
             email = data["email"].strip().lower()
