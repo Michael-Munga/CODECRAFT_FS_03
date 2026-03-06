@@ -7,6 +7,16 @@ import os
 from sqlalchemy.orm import joinedload
 from sqlalchemy import and_
 
+from logging_config import get_logger, log_exception
+from request_tracking import PerformanceTimer
+
+logger = get_logger('payment')
+
+def mask_phone(phone: str) -> str:
+    if not phone or len(phone) < 4:
+        return "****"
+    return "*" * (len(phone) - 4) + phone[-4:]
+
 class PaymentResource(Resource):
     @jwt_required()
     def post(self):
@@ -22,9 +32,10 @@ class PaymentResource(Resource):
                 return {"error": "User not found"}, 404
             
             # Get cart with items and locking
-            cart = db.session.query(Cart)\
-                .options(joinedload(Cart.items).joinedload(CartItem.product))\
-                .filter_by(user_id=user_id).with_for_update().first()
+            with PerformanceTimer('db_query_payment'):
+                cart = db.session.query(Cart)\
+                    .options(joinedload(Cart.items).joinedload(CartItem.product))\
+                    .filter_by(user_id=user_id).with_for_update().first()
                 
             if not cart or not cart.items:
                 return {"error": "Cart is empty"}, 400
@@ -40,13 +51,14 @@ class PaymentResource(Resource):
             
             # Validate stock availability
             insufficient_stock = []
-            for cart_item in cart.items:
-                if cart_item.product.stock < cart_item.quantity:
-                    insufficient_stock.append({
-                        'product_name': cart_item.product.name,
-                        'available': cart_item.product.stock,
-                        'requested': cart_item.quantity
-                    })
+            with PerformanceTimer('stock_validation'):
+                for cart_item in cart.items:
+                    if cart_item.product.stock < cart_item.quantity:
+                        insufficient_stock.append({
+                            'product_name': cart_item.product.name,
+                            'available': cart_item.product.stock,
+                            'requested': cart_item.quantity
+                        })
             
             if insufficient_stock:
                 return {
@@ -73,12 +85,13 @@ class PaymentResource(Resource):
             account_ref = f"ORDER-{user_id}-{cart.id}"
             transaction_desc = f"Payment for order by {user.full_name}"
             
-            response = mpesa_service.initiate_stk_push(
-                phone_number=phone_number,
-                amount=int(total_amount),
-                account_reference=account_ref,
-                transaction_desc=transaction_desc
-            )
+            with PerformanceTimer('mpesa_stk_push'):
+                response = mpesa_service.initiate_stk_push(
+                    phone_number=phone_number,
+                    amount=int(total_amount),
+                    account_reference=account_ref,
+                    transaction_desc=transaction_desc
+                )
             
             if "error" in response:
                 return {"error": response["error"]}, 400
@@ -114,6 +127,16 @@ class PaymentResource(Resource):
             
             db.session.commit()
             
+            # Log payment initiation
+            logger.info(
+                "Payment initiated",
+                event="payment_initiated",
+                order_id=order.id,
+                amount=total_amount,
+                phone_number=mask_phone(phone_number),
+                checkout_request_id=response.get("CheckoutRequestID")
+            )
+            
             return {
                 "message": "STK Push initiated successfully",
                 "order_id": order.id,
@@ -123,7 +146,12 @@ class PaymentResource(Resource):
             
         except Exception as e:
             db.session.rollback()
-            print(f"Error initiating payment: {str(e)}")
+            # Log payment initiation failure
+            log_exception(
+                "Failed to initiate payment",
+                error=e,
+                event="payment_initiation_failure"
+            )
             return {"error": "Failed to initiate payment"}, 500
 
 class PaymentCallbackResource(Resource):
@@ -132,13 +160,21 @@ class PaymentCallbackResource(Resource):
         try:
             # Parse callback data
             data = request.get_json()
-            print(f"M-Pesa Callback Data: {data}")
+            logger.info("M-Pesa Callback Data received", event="payment_callback_raw_data")
             
             # Extract relevant information
             if "Body" in data and "stkCallback" in data["Body"]:
                 callback_data = data["Body"]["stkCallback"]
                 checkout_request_id = callback_data.get("CheckoutRequestID")
                 result_code = callback_data.get("ResultCode")
+                
+                # Log callback received
+                logger.info(
+                    "Payment callback received",
+                    event="payment_callback_received",
+                    checkout_request_id=checkout_request_id,
+                    result_code=result_code
+                )
                 
                 # Begin transaction
                 db.session.begin_nested()
@@ -159,24 +195,55 @@ class PaymentCallbackResource(Resource):
                         db.session.query(CartItem).filter_by(cart_id=cart.id).delete()
                     
                     db.session.commit()
+                    
+                    # Log payment successful
+                    logger.info(
+                        "Payment successful",
+                        event="payment_successful",
+                        order_id=order.id,
+                        status="paid"
+                    )
                     return {"message": "Payment successful"}, 200
                 else:
                     # Payment failed - restore stock
                     order.status = "failed"
                     
+                    # Log payment failed
+                    logger.warning(
+                        "Payment failed",
+                        event="payment_failed",
+                        order_id=order.id,
+                        result_code=result_code
+                    )
+                    
                     # Restore stock for failed order
+                    restored_count = 0
                     for order_item in order.items:
                         product = db.session.query(Product).filter(Product.id == order_item.product_id).with_for_update().first()
                         if product:
                             product.stock += order_item.quantity
+                            restored_count += order_item.quantity
                     
                     db.session.commit()
+                    
+                    # Log stock restored
+                    logger.info(
+                        "Stock restored after failed payment",
+                        event="stock_restored",
+                        order_id=order.id,
+                        restored_count=restored_count
+                    )
                     return {"message": "Payment failed"}, 200
             
             return {"error": "Invalid callback data"}, 400
         except Exception as e:
             db.session.rollback()
-            print(f"Error handling callback: {str(e)}")
+            # Log callback handling failure
+            log_exception(
+                "Failed to handle payment callback",
+                error=e,
+                event="callback_handling_failure"
+            )
             return {"error": "Failed to handle callback"}, 500
 
 class PaymentVerificationResource(Resource):
@@ -195,7 +262,8 @@ class PaymentVerificationResource(Resource):
             db.session.begin_nested()
             
             # Verify transaction
-            response = mpesa_service.verify_transaction(checkout_request_id)
+            with PerformanceTimer('mpesa_verify'):
+                response = mpesa_service.verify_transaction(checkout_request_id)
             
             if "error" in response:
                 return {"error": response["error"]}, 400
@@ -221,19 +289,53 @@ class PaymentVerificationResource(Resource):
                 if cart:
                     db.session.query(CartItem).filter_by(cart_id=cart.id).delete()
                 message = "Payment successful"
+                
+                # Log payment successful
+                logger.info(
+                    "Payment successful via verification",
+                    event="payment_successful",
+                    order_id=order.id,
+                    status="paid"
+                )
             else:
                 # Payment failed - restore stock
                 order.status = "failed"
                 
+                # Log payment failed
+                logger.warning(
+                    "Payment failed via verification",
+                    event="payment_failed",
+                    order_id=order.id,
+                    result_code=result_code
+                )
+                
                 # Restore stock for failed order
+                restored_count = 0
                 for order_item in order.items:
                     product = db.session.query(Product).filter(Product.id == order_item.product_id).with_for_update().first()
                     if product:
                         product.stock += order_item.quantity
+                        restored_count += order_item.quantity
                         
                 message = "Payment failed"
+                
+                # Log stock restored
+                logger.info(
+                    "Stock restored after failed payment verification",
+                    event="stock_restored",
+                    order_id=order.id,
+                    restored_count=restored_count
+                )
             
             db.session.commit()
+            
+            # Log verification
+            logger.info(
+                "Payment verified",
+                event="payment_verified",
+                order_id=order.id,
+                status=order.status
+            )
             
             return {
                 "message": message,
@@ -242,5 +344,10 @@ class PaymentVerificationResource(Resource):
             
         except Exception as e:
             db.session.rollback()
-            print(f"Error verifying payment: {str(e)}")
+            # Log payment verification failure
+            log_exception(
+                "Failed to verify payment",
+                error=e,
+                event="payment_verification_failure"
+            )
             return {"error": "Failed to verify payment"}, 500

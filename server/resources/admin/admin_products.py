@@ -6,6 +6,11 @@ from models import db, Product, OrderItem, User
 from sqlalchemy.orm import joinedload
 from utils.decorators import admin_required
 
+from auth_context import log_user_action
+from logging_config import get_logger, log_exception
+
+logger = get_logger('admin.products')
+
 class AdminProductsResource(Resource):
     """
     Admin-only Product Management
@@ -55,13 +60,29 @@ class AdminProductsResource(Resource):
             })
             data.append(product_dict)
 
+        # Log products listed
+        logger.info(
+            f"Admin {current_user_id} listed {len(data)} products",
+            event="products_listed",
+            count=len(data),
+            low_stock_filter=low_stock is not None
+        )
+
         return {"products": data, "count": len(data)}, 200
 
     @jwt_required()
     def post(self):
         """Create a new product (admin only)"""
-        current_user = User.query.get(get_jwt_identity())
+        current_user_id = get_jwt_identity()
+        current_user = User.query.get(current_user_id)
         if not current_user or current_user.role != "admin":
+            # Log unauthorized attempt
+            logger.warning(
+                "Non-admin attempted to create product",
+                event="unauthorized_admin_access",
+                endpoint="create_product",
+                role=current_user.role if current_user else None
+            )
             return {"error": "Admins only"}, 403
 
         data = request.get_json()
@@ -85,6 +106,19 @@ class AdminProductsResource(Resource):
             db.session.add(product)
             db.session.commit()
             
+            # Log product created
+            logger.info(
+                f"Product '{product.name}' created by admin",
+                event="product_created",
+                product_id=product.id,
+                product_name=product.name,
+                price=product.price,
+                stock=product.stock
+            )
+            
+            # Record admin action
+            log_user_action('product_created', product_id=product.id)
+            
             return {
                 "message": "Product created successfully",
                 "product": product.to_dict()
@@ -93,6 +127,13 @@ class AdminProductsResource(Resource):
             return {"error": f"Invalid data: {str(e)}"}, 400
         except Exception as e:
             db.session.rollback()
+            # Log product creation failure
+            log_exception(
+                "Failed to create product",
+                error=e,
+                event="product_operation_failure",
+                operation="create"
+            )
             return {"error": f"Failed to create product: {str(e)}"}, 500
 
     @admin_required
@@ -111,17 +152,39 @@ class AdminProductsResource(Resource):
         try:
             # Update allowed fields
             updatable_fields = ["name", "description", "price", "stock", "image_url", "category_id"]
+            updated_fields = []
             for field in updatable_fields:
                 if field in data:
                     setattr(product, field, data[field])
+                    updated_fields.append(field)
 
             db.session.commit()
+            
+            # Log product updated
+            logger.info(
+                f"Product {product.id} updated by admin",
+                event="product_updated",
+                product_id=product.id,
+                changed_fields=updated_fields
+            )
+            
+            # Record admin action
+            log_user_action('product_updated', product_id=product.id)
+            
             return {
                 "message": "Product updated successfully",
                 "product": product.to_dict()
             }, 200
         except Exception as e:
             db.session.rollback()
+            # Log product update failure
+            log_exception(
+                "Failed to update product",
+                error=e,
+                event="product_operation_failure",
+                operation="update",
+                product_id=product_id
+            )
             return {"error": f"Failed to update product: {str(e)}"}, 500
 
     @admin_required
@@ -141,6 +204,13 @@ class AdminProductsResource(Resource):
             .count()
         
         if active_order_items > 0:
+            # Log deletion blocked
+            logger.warning(
+                f"Admin attempted to delete product {product_id} with active orders",
+                event="product_deletion_blocked",
+                product_id=product_id,
+                active_order_count=active_order_items
+            )
             return {
                 "error": f"Cannot delete product. It is referenced in {active_order_items} active orders."
             }, 400
@@ -148,7 +218,27 @@ class AdminProductsResource(Resource):
         try:
             db.session.delete(product)
             db.session.commit()
+            
+            # Log product deleted
+            logger.info(
+                f"Product '{product.name}' deleted by admin",
+                event="product_deleted",
+                product_id=product_id,
+                product_name=product.name
+            )
+            
+            # Record admin action
+            log_user_action('product_deleted', product_id=product_id)
+            
             return {"message": "Product deleted successfully"}, 200
         except Exception as e:
             db.session.rollback()
+            # Log product deletion failure
+            log_exception(
+                "Failed to delete product",
+                error=e,
+                event="product_operation_failure",
+                operation="delete",
+                product_id=product_id
+            )
             return {"error": f"Failed to delete product: {str(e)}"}, 500

@@ -4,6 +4,11 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from models import db, Category, User
 from utils.decorators import admin_required
 
+from auth_context import log_user_action
+from logging_config import get_logger
+
+logger = get_logger('admin.categories')
+
 class CategoriesResource(Resource):
     def get(self, id=None):
         """
@@ -17,6 +22,14 @@ class CategoriesResource(Resource):
             return category.to_dict(), 200
 
         categories = Category.query.all()
+        
+        # Log categories listed
+        logger.info(
+            f"Admin listed {len(categories)} categories",
+            event="category_listed",
+            count=len(categories)
+        )
+        
         return [cat.to_dict() for cat in categories], 200
 
     @admin_required
@@ -42,6 +55,17 @@ class CategoriesResource(Resource):
         db.session.add(category)
         db.session.commit()
 
+        # Log category created
+        logger.info(
+            f"Category '{category.name}' created by admin",
+            event="category_created",
+            category_id=category.id,
+            name=category.name
+        )
+        
+        # Record admin action
+        log_user_action('category_created', category_id=category.id)
+
         return {"message": "Category added", "category": category.to_dict()}, 201
 
     @admin_required
@@ -61,6 +85,18 @@ class CategoriesResource(Resource):
         category.description = data.get("description", category.description)
 
         db.session.commit()
+        
+        # Log category updated
+        logger.info(
+            f"Category '{category.name}' updated by admin",
+            event="category_updated",
+            category_id=category.id,
+            name=category.name
+        )
+        
+        # Record admin action
+        log_user_action('category_updated', category_id=category.id)
+        
         return {"message": "Category updated", "category": category.to_dict()}, 200
 
     @admin_required
@@ -77,4 +113,16 @@ class CategoriesResource(Resource):
 
         db.session.delete(category)
         db.session.commit()
+        
+        # Log category deleted
+        logger.info(
+            f"Category '{category.name}' deleted by admin",
+            event="category_deleted",
+            category_id=category.id,
+            name=category.name
+        )
+        
+        # Record admin action
+        log_user_action('category_deleted', category_id=category.id)
+        
         return {"message": f"Category '{category.name}' deleted"}, 200

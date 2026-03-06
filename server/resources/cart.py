@@ -4,6 +4,11 @@ from flask import request
 from models import db, Cart, CartItem, Product
 from sqlalchemy import and_
 
+from logging_config import get_logger, log_exception
+from request_tracking import PerformanceTimer
+
+logger = get_logger('cart')
+
 # CART RESOURCE
 class CartResource(Resource):
     @jwt_required()
@@ -12,8 +17,17 @@ class CartResource(Resource):
         user_id = get_jwt_identity()
         # Use joinedload to prevent N+1 queries
         from sqlalchemy.orm import joinedload
-        cart = Cart.query.options(joinedload(Cart.items).joinedload(CartItem.product)).filter_by(user_id=user_id).first()
+        
+        with PerformanceTimer('db_query_cart'):
+            cart = Cart.query.options(joinedload(Cart.items).joinedload(CartItem.product)).filter_by(user_id=user_id).first()
+        
         if not cart:
+            # Log cart viewed (empty)
+            logger.info(
+                "User viewed empty cart",
+                event="cart_viewed",
+                item_count=0
+            )
             return {'items': []}, 200
 
         items = [
@@ -27,6 +41,14 @@ class CartResource(Resource):
             }
             for item in cart.items
         ]
+        
+        # Log cart viewed
+        logger.info(
+            f"User viewed cart with {len(items)} items",
+            event="cart_viewed",
+            item_count=len(items)
+        )
+        
         return {'items': items}, 200
 
     @jwt_required()
@@ -56,6 +78,14 @@ class CartResource(Resource):
                 return {'message': 'Product not found'}, 404
 
             if product.stock < quantity:
+                # Log insufficient stock
+                logger.warning(
+                    f"Insufficient stock for product {product_id}",
+                    event="insufficient_stock",
+                    product_id=product_id,
+                    requested_quantity=quantity,
+                    available_quantity=product.stock
+                )
                 return {'message': f'Insufficient stock. Available: {product.stock}, Requested: {quantity}'}, 400
 
             # Get or create cart with locking
@@ -74,10 +104,26 @@ class CartResource(Resource):
             if existing_item:
                 new_quantity = existing_item.quantity + quantity
                 if product.stock < new_quantity:
+                    # Log insufficient stock
+                    logger.warning(
+                        f"Insufficient stock for product {product_id} to add more",
+                        event="insufficient_stock",
+                        product_id=product_id,
+                        requested_quantity=quantity,
+                        available_quantity=product.stock
+                    )
                     return {'message': f'Insufficient stock. Available: {product.stock}, Would have: {new_quantity}'}, 400
                 existing_item.quantity = new_quantity
             else:
                 if quantity > product.stock:
+                    # Log insufficient stock
+                    logger.warning(
+                        f"Insufficient stock for product {product_id}",
+                        event="insufficient_stock",
+                        product_id=product_id,
+                        requested_quantity=quantity,
+                        available_quantity=product.stock
+                    )
                     return {'message': f'Insufficient stock. Available: {product.stock}, Requested: {quantity}'}, 400
                 new_item = CartItem(cart_id=cart.id, product_id=product.id, quantity=quantity)
                 db.session.add(new_item)
@@ -90,6 +136,17 @@ class CartResource(Resource):
             else:
                 final_item = CartItem.query.filter_by(cart_id=cart.id, product_id=product.id).first()
 
+            
+            
+            # Log successful item add
+            logger.info(
+                f"User added product {product_id} to cart",
+                event="cart_item_added",
+                product_id=product_id,
+                product_name=final_item.product.name,
+                quantity=quantity
+            )
+
             return {
                 'id': final_item.id,
                 'product_id': final_item.product.id,
@@ -101,6 +158,13 @@ class CartResource(Resource):
 
         except Exception as e:
             db.session.rollback()
+            # Log cart operation failure
+            log_exception(
+                "Failed to add item to cart",
+                error=e,
+                event="cart_operation_failure",
+                operation="add_item"
+            )
             return {'message': f'Error adding to cart: {str(e)}'}, 500
 
 
@@ -120,6 +184,13 @@ class CartItemResource(Resource):
                 return {'message': 'Item not found'}, 404
 
             if item.cart.user_id != user_id:
+                # Log unauthorized access
+                logger.warning(
+                    f"User attempted to update cart item not belonging to them",
+                    event="unauthorized_cart_item_access",
+                    actual_owner_id=item.cart.user_id,
+                    item_id=item_id
+                )
                 return {'message': 'Unauthorized'}, 403
 
             data = request.get_json()
@@ -137,13 +208,31 @@ class CartItemResource(Resource):
             product = db.session.query(Product).filter(Product.id == item.product_id).with_for_update().first()
             
             if quantity > product.stock:
+                # Log insufficient stock
+                logger.warning(
+                    f"Insufficient stock for product {item.product_id} on update",
+                    event="insufficient_stock",
+                    product_id=item.product_id,
+                    requested_quantity=quantity,
+                    available_quantity=product.stock
+                )
                 return {'message': f'Insufficient stock. Available: {product.stock}, Requested: {quantity}'}, 400
 
+            old_quantity = item.quantity
             item.quantity = quantity
             db.session.commit()
 
             # Refresh item after commit
             updated_item = CartItem.query.filter_by(id=item.id).first()
+
+            # Log item update
+            logger.info(
+                f"User updated cart item {item.id}",
+                event="cart_item_updated",
+                item_id=item.id,
+                old_quantity=old_quantity,
+                new_quantity=quantity
+            )
 
             return {
                 'id': updated_item.id,
@@ -156,6 +245,14 @@ class CartItemResource(Resource):
 
         except Exception as e:
             db.session.rollback()
+            # Log update failure
+            log_exception(
+                "Failed to update cart item",
+                error=e,
+                event="cart_operation_failure",
+                operation="update_item",
+                item_id=item_id
+            )
             return {'message': f'Error updating cart item: {str(e)}'}, 500
 
     @jwt_required()
@@ -169,12 +266,34 @@ class CartItemResource(Resource):
                 return {'message': 'Item not found'}, 404
 
             if item.cart.user_id != user_id:
+                # Log unauthorized access
+                logger.warning(
+                    f"User attempted to delete cart item not belonging to them",
+                    event="unauthorized_cart_item_access",
+                    actual_owner_id=item.cart.user_id,
+                    item_id=item_id
+                )
                 return {'message': 'Unauthorized'}, 403
 
             db.session.delete(item)
             db.session.commit()
 
+            # Log item deletion
+            logger.info(
+                f"User deleted cart item {item_id}",
+                event="cart_item_deleted",
+                item_id=item_id
+            )
+
             return {'message': 'Deleted'}, 204
         except Exception as e:
             db.session.rollback()
+            # Log delete failure
+            log_exception(
+                "Failed to delete cart item",
+                error=e,
+                event="cart_operation_failure",
+                operation="delete_item",
+                item_id=item_id
+            )
             return {'message': f'Error removing from cart: {str(e)}'}, 500
