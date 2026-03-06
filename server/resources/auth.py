@@ -6,6 +6,10 @@ from extensions import ma  # import the Marshmallow instance
 
 from marshmallow import validate
 
+# Import Layer 4 reliability components
+from auth_context import authenticate_user_context, log_user_action
+from logging_config import get_logger
+
 # -----------------------------
 # Schemas: Request validation
 # -----------------------------
@@ -52,11 +56,34 @@ class AuthResource(Resource):
 
             user = User.query.filter_by(email=email).first()
             if not user or not user.verify_password(password):
+                # Log failed login attempt
+                auth_logger = get_logger('auth')
+                auth_logger.warning(
+                    f"Failed login attempt for email: {email}",
+                    event='failed_login',
+                    email=email,
+                    remote_addr=request.environ.get('REMOTE_ADDR'),
+                    user_agent=request.headers.get('User-Agent', 'Unknown')
+                )
                 return {"error": "Invalid email or password"}, 401
 
+            # Successful login - set authentication context and log
+            authenticate_user_context(user.id)
+            log_user_action('login', user.id)
+            
             token = create_access_token(identity=user.id)
             redirect_url = "/admin/dashboard" if user.role == "admin" else "/"
             user_data = UserResponseSchema().dump(user)
+
+            # Log successful login
+            auth_logger = get_logger('auth')
+            auth_logger.info(
+                f"User {user.id} logged in successfully",
+                event='successful_login',
+                user_id=user.id,
+                email=user.email,
+                role=user.role
+            )
 
             return {"user": user_data, "access_token": token, "redirect_url": redirect_url}, 200
 
@@ -91,8 +118,22 @@ class AuthResource(Resource):
             db.session.add(new_user)
             db.session.commit()
 
+            # Registration successful - set authentication context and log
+            authenticate_user_context(new_user.id)
+            log_user_action('registration', new_user.id)
+            
             token = create_access_token(identity=new_user.id)
             user_data = UserResponseSchema().dump(new_user)
+
+            # Log successful registration
+            auth_logger = get_logger('auth')
+            auth_logger.info(
+                f"User {new_user.id} registered successfully",
+                event='successful_registration',
+                user_id=new_user.id,
+                email=new_user.email,
+                phone_number=new_user.phone_number
+            )
 
             return {"message": "User registered successfully", "user": user_data, "access_token": token, "redirect_url": "/"}, 201
 

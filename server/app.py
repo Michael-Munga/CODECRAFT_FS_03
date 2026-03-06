@@ -6,8 +6,16 @@ import os
 from datetime import timedelta
 from dotenv import load_dotenv
 from flask_jwt_extended import JWTManager
+import logging
 # Import extensions
 from extensions import db, bcrypt, ma, limiter
+# Import Layer 4 reliability components (updated with prevention focus)
+from logging_config import setup_logging
+from request_tracking import request_context_middleware, set_user_context
+from request_logging import setup_comprehensive_logging
+from logging_config import log_info  # Use prevention-focused logging
+# Integrate JWT with authentication context
+from auth_context import jwt_auth_integration
 # Import resources
 from resources.auth import AuthResource
 from resources.customer.products import ProductListResource
@@ -22,6 +30,18 @@ from resources.payment import PaymentResource, PaymentCallbackResource, PaymentV
 # -----------------------------
 load_dotenv()
 app = Flask(__name__)
+
+# -----------------------------
+# Layer 4: System Reliability Setup
+# -----------------------------
+# Setup prevention-focused structured logging
+logger = setup_logging(logging.INFO)
+
+# Add request ID tracking middleware
+request_context_middleware(app)
+
+# Add comprehensive request/response logging with prevention
+setup_comprehensive_logging(app)
 
 # Config
 app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URI")
@@ -40,11 +60,22 @@ CORS(app)
 ma.init_app(app)
 limiter.init_app(app)  # Initialize rate limiter
 
+
+jwt_auth_integration(jwt)
+
 # -----------------------------
 # Rate Limit Error Handler
 # -----------------------------
 @app.errorhandler(429)
 def ratelimit_handler(e):
+    log_info(
+        "Rate limit exceeded",
+        safe_data={
+            'event': 'rate_limit_exceeded',
+            'retry_after': str(e.retry_after),
+            'remote_addr': request.remote_addr if 'request' in globals() else 'unknown'
+        }
+    )
     return {
         "error": "Rate limit exceeded",
         "message": f"Too many requests. Please try again in {e.description}",
@@ -96,11 +127,25 @@ limiter.limit("10 per minute")(PaymentVerificationResource)  # 10 verification r
 @app.route("/")
 @limiter.limit("10 per minute")  # 10 requests per minute for root
 def home():
+    log_info(
+        "Home endpoint accessed",
+        safe_data={
+            'event': 'home_access',
+            'ip_address': request.remote_addr
+        }
+    )
     return "Flask backend is running!"
 
 @app.route("/healthz")
 @limiter.exempt  # Health check is exempt from rate limiting
 def health_check():
+    log_info(
+        "Health check performed",
+        safe_data={
+            'event': 'health_check',
+            'status': 'ok'
+        }
+    )
     return "OK", 200
 
 # -----------------------------
